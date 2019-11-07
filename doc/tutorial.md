@@ -81,7 +81,16 @@ def propSqrt: Property =
   } yield scala.math.sqrt(n * n) ==== n
 ```
 
-Check it!
+Add it to to `tests`
+```
+override def tests: List[Test] =
+    List(
+      property("property", propConcatLists)
+      , property("property", propSqrt)
+    )
+```
+
+Check it! 
 
 ```
 - Spec$.property: Falsified after 8 passed tests
@@ -122,9 +131,11 @@ There are two main concepts to Hedgehog are:
 - [Results](#results)
 - [Generators](#generators)
 
-Let's start with the more simple and familar results and then move on to the
+Let's start with the more simple and familar results, and then move on to the
 more interesting generators.
 
+__IS RESULT A KNOWN SCALA TYPE__
+__HOW DO I RUN AN INDIVIDUAL PROP IN SBT__
 
 ### Results
 
@@ -380,9 +391,9 @@ either `p1` or `p2` holds.
 Generators are responsible for generating test data in Hedgehog, and are
 represented by the `hedgehog.Gen` class. You need to know how to use this
 class if you want Hedgehog to generate data of types that are not supported
-by default to state properties about a specific subset of a type. In the `Gen`
-object, there are several methods for creating new and modifying existing
-generators. We will show how to use some of them in this section. For a more
+by default, (???) to state properties about a specific subset of a type. In the `Gen`
+object, there are several methods for creating new generators and modifying existing
+ones. We will show how to use some of them in this section. For a more
 complete reference of what is available, please see the Github source.
 
 A generator can be seen simply as a function that takes some generation
@@ -448,7 +459,7 @@ Consider the following example where a binary integer tree is generated:
 ```scala
 sealed abstract class Tree
 case class Node(left: Tree, right: Tree, v: Int) extends Tree
-case object Leaf extends Tree
+case object Leaf extends Tree -- ??? Why is this an object not a class?
 
 val genLeaf: Gen[Tree] =
   Gen.constant(Leaf)
@@ -468,7 +479,7 @@ We can now generate a sample tree:
 
 ```scala
 def testTree: Property =
-  forAll {
+  forAll { -- ??? What imports do I need to get this working?
     t <- genTree.forAll
   } yield {
     println(t)
@@ -487,7 +498,7 @@ Node(Leaf,Node(Node(Node(Node(Node(Node(Leaf,Leaf,-71),Node(Leaf,Leaf,-49),17),L
 
 #### Lists
 
-There is a use generator, `list`, that generates a list of the current `Gen`.
+There is a useful generator `list`, that generates a list of the current `Gen`.
 You can use it in the following way:
 
 ```scala
@@ -549,7 +560,7 @@ but generally you should try to refactor your property specification instead of
 generating more test cases, if you get this scenario.
 
 Using `ensure`, we realise that a property might not just pass or fail, it
-could also be undecided if the implication condition doesn't get fulfilled.
+could also be undecided if the implication condition `n => n == 0` doesn't get fulfilled.
 
 
 #### Sized
@@ -579,8 +590,8 @@ In some ways the most interesting and important feature of Hedgehog is that if
 it finds an argument that falsifies a property, it tries to _shrink_ that
 argument before it is reported.
 
-This is done automatically! This is crucially different from [QuickCheck] and
-[ScalaCheck] which requires some hand-holding when it comes to shrinking.
+This is done automatically! This is crucially different from [QuickCheck](http://hackage.haskell.org/package/QuickCheck) and
+[ScalaCheck](https://www.scalacheck.org) which require some hand-holding when it comes to shrinking.
 We recommended watching the [original presentation](../README.md#motivation)
 for more information on how this works.
 
